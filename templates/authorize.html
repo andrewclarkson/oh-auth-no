@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+    <form method="post">
+        <p>Authorize this application to access:</p>
+        <ul>
+        {% for scope in scopes %}
+        <li><input checked="true" type="checkbox" name="scopes" value="{{scope}}">
+            {{ scope }}
+        </li>
+        {% endfor %}
+        </ul>
+        <input type="submit" value="Authorize">
+    </form> 
+{% endblock %}

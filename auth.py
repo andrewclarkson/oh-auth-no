@@ -1,24 +1,8 @@
 import falcon
 
 from oauthlib.oauth2 import Server, RequestValidator
-
-CLIENTS = [
-    {
-        'client_id': 'hello',
-        'client_secret': 'world',
-        'redirect_uris': [
-            'localhost:8000/posts',            
-        ],
-        'response_types': [
-            'code',
-            'token',
-        ],
-        'default_scopes': [
-            'posts',
-            'users',
-        ],
-    }        
-]
+from templates import env
+from db import db
 
 class Validator(RequestValidator):
     """
@@ -26,39 +10,63 @@ class Validator(RequestValidator):
     """
 
     def validate_client_id(self, client_id, request):
-        for client in CLIENTS:
-            if client['client_id'] == client_id:
-                return True
-        return False
+        client = db.clients.find_one({'client_id': client_id}) 
+        if client == None:
+            return False
+        else:
+            return True
 
     def validate_redirect_uri(self, client_id, redirect_uri, request):
-        for client in CLIENTS:
-            if client['client_id'] == client_id:
-                if redirect_uri in client['redirect_uris']:
-                    return True
-                else:
-                    return False
-        return False
+        client = db.clients.find_one({
+            'client_id': client_id,
+            'redirect_uris': redirect_uri,    
+        }) 
+        if client == None:
+            return False
+        else:
+            return True
 
     def validate_response_type(self, client_id, response_type, client, request):
-        for client in CLIENTS:
-            if client['client_id'] == client_id:
-                if response_type in client['response_types']:
-                    return True
-                else:
-                    return False
-        return False
+        client = db.clients.find_one({
+            'client_id': client_id,
+            'response_types': response_type,
+        }) 
+        if client == None:
+            return False
+        else:
+            return True
 
     def validate_scopes(self, client_id, scopes, client, request):
         return True
 
     def get_default_scopes(self, client_id, request):
-        for client in CLIENTS:
-            if client['client_id'] == client_id:
-                return client['default_scopes']
-        return []
+        client = db.clients.find_one({'client_id': client_id}) 
+        if client == None:
+            return False
+        else:
+            return client['default_scopes']
 
+    def get_default_redirect_uri(self, client_id, request):
+        client = db.clients.find_one({'client_id': client_id}) 
+        if client == None:
+            raise "Bad client id"
+        
+        else:
+            return client['redirect_uris'][0]
 
+    def save_authorization_code(self, client_id, code, request):
+        client = db.clients.find_one({'client_id': client_id}) 
+        if client == None:
+            raise "Bad client id"
+
+        db.authorization_codes.insert_one({
+            'client': client,
+            'user':  request.user,
+            'redirect_uri': request.redirect_uri,
+            'scopes': request.scopes,
+        })
+
+        return client['redirect_uris'][0]
 
 server = Server(Validator())
 
@@ -77,27 +85,60 @@ class Authorize():
         """
         A request to authorize an application
         """
+
+        if not 'user' in request.cookies:
+            response.status = falcon.HTTP_302
+            redirect = request.uri
+            
+            redirect = falcon.util.uri.encode(redirect)
+            
+            response.location = '/users/login?redirect=' + redirect
+            return
+
+        user = db.users.find_one({'token': request.cookies['user']})
+        if not user:
+            response.status = falcon.HTTP_401
+            response.location = '/users/login'
+            return
+
         scopes, credentials = self.oauth.validate_authorization_request(
             uri = request.uri, 
             http_method = 'GET', 
-            #body = request.params, 
             headers = request.headers
         )
-        print(credentials)
-        response.status = falcon.HTTP_200
-        response.body = str({'scopes': scopes, 'credentials': credentials})
-
+        template = env.get_template('authorize.html')
+        body = template.render(scopes=scopes)
+        response.status = falcon.HTTP_200 
+        response.content_type = 'text/html'
+        response.body = body
+        
     def on_post(self, request, response):
+        if not 'user' in request.cookies:
+            response.status = falcon.HTTP_302
+            redirect = request.uri
+            
+            redirect = falcon.util.uri.encode(redirect)
+            
+            response.location = '/users/login?redirect=' + redirect
+            return
+
+        user = db.users.find_one({'token': request.cookies['user']})
+        if not user:
+            response.status = falcon.HTTP_401
+            response.location = '/users/login'
+            return
+        
         headers, body, status = self.oauth.create_authorization_response(
             uri = request.uri,
             http_method = 'POST',
-            body = request.body,
-            headers = request.header,
-            scopes = ['default'] 
+            headers = request.headers,
+            scopes = request.get_param_as_list('scopes'),
+            credentials = {'user': user}, 
         )
-        response.status = status
-        response.headers = headers
-        response.body = body
+
+        response.status = falcon.HTTP_302
+        response.location = 'http://' + headers['Location']
+        response.body = ''
 
 class Revoke():
     def __init__(self):

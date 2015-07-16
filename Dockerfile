@@ -11,4 +11,4 @@ RUN pip install -r requirements.txt
 # Open up port 8000 for other container's only
 EXPOSE 8000
 
-CMD gunicorn -b 0.0.0.0:8000 app:app
+CMD gunicorn --reload -b 0.0.0.0:8000 app:app
