@@ -139,12 +139,21 @@ def authenticated():
                     <section>
 					<pre><code data-trim contenteditable>
 ...
-requests.post('https://secure.meetup.com/oauth2/access', {
+r = requests.post('https://secure.meetup.com/oauth2/access', {
     'client_id': client_id,
     'client_secret': client_secret,
     'grant_type': 'authorization_code',
     'redirect_uri': url_for('authenticated'),
     'code': code
+})
+token = r.json()['access_token']
+                    </code></pre>
+                    </section>
+                    <section>
+					<pre><code data-trim contenteditable>
+...
+r = requests.get('https://api.meetup.com/notifications', headers= {
+    'Authorization': 'Bearer ' + token, 
 })
                     </code></pre>
                     </section>
