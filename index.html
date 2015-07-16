@@ -112,6 +112,44 @@
                     </ul>
                 </section>
 
+                <section>
+                    <section>
+                        <h2>Authorization Code</h2>
+                        <p>Server app</p>
+                    </section>
+                    <section>
+                        <p><a href="https://secure.meetup.com/meetup_api/oauth_consumers/">Register your consumer</a></p>
+                    </section>
+                    <section>
+					<pre><code data-trim contenteditable>
+                        ...
+                        url = 'https://secure.meetup.com/oauth2/authorize?client_id={}&amp;response_type=code&amp;redirect={}'
+                        return redirect(url.format(client_id, url_for('authenticated')))
+                    </code></pre>
+                    </section>
+                    <section>
+					<pre><code data-trim contenteditable>
+                        ...
+                        @app.get('/auth')
+                        def authenticated():
+                            code = request.args['code']
+                            ...
+                    </code></pre>
+                    </section>
+                    <section>
+					<pre><code data-trim contenteditable>
+                        ...
+                        requests.post('https://secure.meetup.com/oauth2/access', {
+    'client_id': client_id,
+    'client_secret': client_secret,
+    'grant_type': 'authorization_code',
+    'redirect_uri': url_for('authenticated'),
+    'code': code
+})
+                    </code></pre>
+                    </section>
+                </section>
+
 				<section>
 					<h2>Pretty Code</h2>
 					<pre><code data-trim contenteditable>
