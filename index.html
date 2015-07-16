@@ -122,24 +122,24 @@
                     </section>
                     <section>
 					<pre><code data-trim contenteditable>
-                        ...
-                        url = 'https://secure.meetup.com/oauth2/authorize?client_id={}&amp;response_type=code&amp;redirect={}'
-                        return redirect(url.format(client_id, url_for('authenticated')))
+...
+url = 'https://secure.meetup.com/oauth2/authorize?client_id={}&amp;response_type=code&amp;redirect={}'
+return redirect(url.format(client_id, url_for('authenticated')))
                     </code></pre>
                     </section>
                     <section>
 					<pre><code data-trim contenteditable>
-                        ...
-                        @app.get('/auth')
-                        def authenticated():
-                            code = request.args['code']
-                            ...
+...
+@app.get('/auth')
+def authenticated():
+    code = request.args['code']
+...
                     </code></pre>
                     </section>
                     <section>
 					<pre><code data-trim contenteditable>
-                        ...
-                        requests.post('https://secure.meetup.com/oauth2/access', {
+...
+requests.post('https://secure.meetup.com/oauth2/access', {
     'client_id': client_id,
     'client_secret': client_secret,
     'grant_type': 'authorization_code',
@@ -150,26 +150,6 @@
                     </section>
                 </section>
 
-				<section>
-					<h2>Pretty Code</h2>
-					<pre><code data-trim contenteditable>
-function linkify( selector ) {
-  if( supports3DTransforms ) {
-
-    var nodes = document.querySelectorAll( selector );
-
-    for( var i = 0, len = nodes.length; i &lt; len; i++ ) {
-      var node = nodes[i];
-
-      if( !node.className ) {
-        node.className += ' roll';
-      }
-    }
-  }
-}
-					</code></pre>
-					<p>Code syntax highlighting courtesy of <a href="http://softwaremaniacs.org/soft/highlight/en/description/">highlight.js</a>.</p>
-				</section>
 
 			</div>
 
