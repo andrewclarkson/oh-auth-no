@@ -1,0 +1,10 @@
+app:
+    build: .
+    ports:
+        - "127.0.0.1:8000:8000"
+    links:
+        - db
+    volumes: 
+        - .:/usr/share/app
+db:
+    image: mongo:latest

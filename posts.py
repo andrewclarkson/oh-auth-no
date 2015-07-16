@@ -1,5 +1,7 @@
 import falcon
 
+from db import db
+
 class Collection():
     def on_get(self, request, response):
         """

@@ -1,5 +1,6 @@
 falcon==0.3.0
 gunicorn==19.3.0
+pymongo==3.0.3
 python-mimeparse==0.1.4
 six==1.9.0
 wheel==0.24.0
